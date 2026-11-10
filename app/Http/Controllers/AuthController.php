@@ -39,7 +39,7 @@ class AuthController extends Controller
            'image' => $imagepath
         ]);
         return response()->json([
-            $user,hfhfhfhfhfhfh
+            $user,
         ]);
         } catch (\Exception $e) {
          Log:;info('error while creating account' . $e);
