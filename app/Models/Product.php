@@ -13,7 +13,6 @@ class Product extends Model
         'category',
         'price',
         'image',
-        'searchProduct'
     ];
 
     public function size()
@@ -23,5 +22,9 @@ class Product extends Model
     public function cart()
     {
         return $this->hasMany(Cart::class);
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 }

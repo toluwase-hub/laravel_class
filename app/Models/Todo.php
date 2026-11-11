@@ -12,7 +12,7 @@ class Todo extends Model
     'is_complete'
     ];
 
-    protected function user()
+    public function user()
     {
         return $this->belongsTo(User::class);
     }

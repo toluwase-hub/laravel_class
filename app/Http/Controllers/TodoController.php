@@ -34,25 +34,20 @@ class TodoController extends Controller
     public function store(StoreTodoRequest $request)
     {
         $validateData = $request->validated();
+        $user = $request->user();
         try {
-            $product = Product::find($validateData['user_id']);
-            if (!$product) {
-                return response()->json([
-                    'message' => 'No user found',
-                    'data' => null
-                ]);
-            }
-
             $todo = Todo::create(
-                $validateData
+                [
+                    'user_id' => $user['id'],
+                    'title' => $validateData['title']
+                ]
             );
-            $todo->refresh();
             return response()->json([
                 'message' => 'Task added successful',
                 'data' => $todo
-            ]);
+            ], 200);
         } catch (\Exception $e) {
-            Log::info('error while creating product' . $e);
+            Log::info('error while adding task' . $e);
             return response()->json([
                 'message' => 'error while adding task',
                 'error' => $e,
@@ -63,22 +58,26 @@ class TodoController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Todo $todo, string $id)
+    public function show(Request $request)
     {
-        $todo = Todo::where('user_id', $id)->paginate(3);
+        $user = $request->user();
+        Log::info($user['id']);
         try {
-            if ($todo->isEmpty()) {
+            $user = User::find($user['id']);
+            if (!$user) {
                 return response()->json([
                     'message' => 'No user found',
                     'data' => null
-                ]);
+                ], 404);
             }
+            $todo = Todo::where('user_id', $user['id'])->paginate(3);
+
             return response()->json([
-                'message' => 'User ' . $id . ' Task',
+                'message' => 'User Task',
                 'data' => $todo
-            ]);
+            ], 200);
         } catch (\Exception $e) {
-            Log::info('error while creating product' . $e);
+            Log::info('error while fetching task ' . $e);
             return response()->json([
                 'message' => 'error while fetching task',
                 'error' => $e,
@@ -92,21 +91,19 @@ class TodoController extends Controller
     public function update(Request $request, string $id)
     {
         $validateData = $request->validate([
-            'todo_id' => 'required|exists:todos,id',
             'title' => 'required|string',
-        ], [
-            'todo_id.exists' => 'No task found for this user'
         ]);
+        $user = $request->user();
 
         try {
-            $todo = Todo::where('user_id', $id)->get();
-            if ($todo->isEmpty()) {
+            $todo = User::where('id', $user['id'])->get();
+            if (!$todo) {
                 return response()->json([
                     'message' => 'No user found',
                     'data' => null,
                 ]);
             };
-            $existTitle = Todo::where('id', $validateData['todo_id'])->where('user_id', $id)->first();
+            $existTitle = Todo::where('id', $id)->where('user_id', $user['id'])->first();
 
             if (!$existTitle) {
                 return response()->json([
@@ -123,7 +120,7 @@ class TodoController extends Controller
                 'data' => [
                     $existTitle
                 ],
-            ]);
+            ], 200);
         } catch (\Exception $e) {
             Log::info('error while updating todo' . $e);
             return response()->json([
@@ -136,26 +133,25 @@ class TodoController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function is_complete(UpdateTodoRequest $request, string $id)
+    public function is_complete(Request $request, string $id)
     {
-        $validateData = $request->validated();
+        $user = $request->user();
         try {
-            $todo = Todo::where('user_id', $id)->get();
-            if ($todo->isEmpty()) {
+            $todo = User::where('id', $user['id'])->get();
+            if (!$todo) {
                 return response()->json([
                     'message' => 'No user found',
                     'data' => null,
-                ]);
+                ],404);
             };
-            $existTitle = Todo::where('id', $validateData['todo_id'])->where('user_id', $id)->first();
-
+            $existTitle = Todo::where('id', $id)->where('user_id', $user['id'])->first();
             if (!$existTitle) {
                 return response()->json([
                     'message' => 'No task found for this user',
                     'data' => null
-                ]);
+                ],404);
             };
-            $existTitle['is_complete'] = $validateData['is_complete'];
+            $existTitle['is_complete'] = !$existTitle['is_complete'];
             $existTitle->save();
             $existTitle->refresh();
 
@@ -164,14 +160,14 @@ class TodoController extends Controller
                 'data' => [
                     $existTitle
                 ],
-            ]);
+            ], 200);
         } catch (\Exception $e) {
             Log::info('error while updating todo' . $e);
             return response()->json([
                 'message' => 'error while updating todo',
                 'error' => $e,
             ], 500);
-        } 
+        }
     }
 
     /**
@@ -179,22 +175,16 @@ class TodoController extends Controller
      */
     public function destroy(Request $request, string $id)
     {
-        $validateData = $request->validate([
-            'todo_id' => 'required|exists:todos,id'
-        ], [
-            'todo_id.exists' => 'No task found for this user'
-        ]);
-
+        $user = $request->user();
         try {
-            $todo = Todo::where('user_id', $id)->get();
-            if ($todo->isEmpty()) {
+            $todo = User::where('id', $user['id'])->get();
+            if (!$todo) {
                 return response()->json([
                     'message' => 'No user found',
                     'data' => null,
                 ]);
             };
-            $existTitle = Todo::where('id', $validateData['todo_id'])->where('user_id', $id)->first();
-
+            $existTitle = Todo::where('id', $id)->where('user_id', $user['id'])->first();
             if (!$existTitle) {
                 return response()->json([
                     'message' => 'No task found for this user',
@@ -203,7 +193,6 @@ class TodoController extends Controller
             };
             $existTitle->delete();
             $existTitle->refresh();
-
             return response()->json([
                 'message' => 'Task deleted successful',
                 'data' => [
@@ -216,6 +205,6 @@ class TodoController extends Controller
                 'message' => 'error while deleting todo',
                 'error' => $e,
             ], 500);
-        } 
+        }
     }
 }

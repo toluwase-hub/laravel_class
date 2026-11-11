@@ -23,7 +23,7 @@ class UpdateTodoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'is_complete' => 'sometimes',
+            // 'is_complete' => 'sometimes',
             'todo_id' => 'sometimes'
         ];
     }

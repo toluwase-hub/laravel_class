@@ -27,28 +27,32 @@ class AuthController extends Controller
             'image' => 'required|mimes:jpg,png'
         ]);
         try {
-             if($request->hasFile('image')){
-            $imagepath = $request->file('image')->store('/users', 'public');
-        }
-        $user = user::create([
-           'surname' => $validateUserData['surname'],
-           'firstname' => $validateUserData['firstname'],
-           'email' => $validateUserData['email'],
-           'phone' => $validateUserData['phone'],
-           'password' => $validateUserData['password'],
-           'image' => $imagepath
-        ]);
-        return response()->json([
-            $user,
-        ]);
+            $imagepath = "";
+
+            if ($request->hasFile('image')) {
+                $imagepath = $request->file('image')->store('/users', 'public');
+            }
+
+            $user = user::create([
+                'surname' => $validateUserData['surname'],
+                'firstname' => $validateUserData['firstname'],
+                'email' => $validateUserData['email'],
+                'phone' => $validateUserData['phone'],
+                'password' => $validateUserData['password'],
+                'image' => $imagepath
+            ]);
+            return response()->json([
+                'message' => 'User created successfully',
+                'data' => $user,
+            ]);
         } catch (\Exception $e) {
-         Log:;info('error while creating account' . $e);
-         return response()->json([
-            'message' => 'error while creating account',
-            'error' => $e
-         ]);
+            Log:;
+            info('error while creating account' . $e);
+            return response()->json([
+                'message' => 'error while creating account',
+                'error' => $e
+            ]);
         }
-       
     }
 
     /**
@@ -61,7 +65,7 @@ class AuthController extends Controller
             'password' => 'required'
         ]);
 
-        $user = user::where('email', $validateLoginData['email'])->first();
+        $user = User::where('email', $validateLoginData['email'])->first();
         if (!$user || !Hash::check($validateLoginData['password'], $user->password)) {
             return response()->json(
                 [
@@ -96,18 +100,19 @@ class AuthController extends Controller
         ]);
     }
 
-   public function destroy (Request $request, string $id)
-   {
-    $user = User::find($id);
-    if(!$user){
+    public function destroy(Request $request)
+    {
+        $user = $request->user();
+        $user = User::find($user['id']);
+        if (!$user) {
+            return response()->json([
+                'message' => 'No user found',
+                'data' => null
+            ]);
+        }
+        $user->delete();
         return response()->json([
-            'message' => 'No user found',
-            'data' => null
+            'message' => 'User ' . $user['id'] . ' deleted successful'
         ]);
     }
-    $user->delete();
-    return response()->json([
-        'message' => 'User ' . $id . ' deleted successful'
-    ]);
-   }
 }

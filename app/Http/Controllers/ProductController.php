@@ -87,7 +87,7 @@ class ProductController extends Controller
         }
 
         return response()->json([
-            'message' => '',
+            'message' => 'product found',
             'data' => $product->load('size')
         ]);
     }
@@ -137,7 +137,6 @@ class ProductController extends Controller
      */
     public function update(UpdateProductRequest $request, String $id)
     {
-
         $validateData = $request->validated();
 
         try {
@@ -343,7 +342,7 @@ class ProductController extends Controller
         $product->delete();
 
         return response()->json([
-            'message' => '',
+            'message' => 'product deleted successfully',
             'data' => null
         ]);
     }
