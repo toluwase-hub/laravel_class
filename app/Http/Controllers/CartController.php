@@ -43,7 +43,7 @@ class CartController extends Controller
                     'data' => null
                 ]);
             }
-            $existItem = Cart::where('session_id', $validateData['session_id'])->where('product_id', $validateData['product_id'])->where('size_id', $validateData['size_id'])->first();
+            $existItem = Cart::where('product_id', $validateData['product_id'])->where('size_id', $validateData['size_id'])->first();
             if ($existItem) {
                 $existItem['quantity'] += $validateData['quantity'];
                 $existItem->save();
@@ -55,6 +55,7 @@ class CartController extends Controller
                     'quantity' =>  $validateData['quantity'],
                 ]);
             }
+            Log::info($existItem);
             $existItem->refresh();
             return response()->json([
                 'massage' => 'Product added to cart successful',
@@ -106,12 +107,13 @@ class CartController extends Controller
     public function destroy(Request $request)
     {
         $validateData = $request->validate([
-            'session_id' => 'required',
+            'session_id' => 'required|exists:carts,session_id',
             'cart_id' => 'required|exists:carts,id'
-        ], ['cart_id.exists' => 'no cart found for this user']);
+        ], ['cart_id.exists' => 'selected cart id not found'],
+         ['session_id.exists' => 'selected cart id not found']);
         try {
-            $cart = Cart::where('session_id', $validateData['session_id'])->where('id', $validateData['cart_id']);
-            if (!$cart) {
+            $cart = Cart::where('id', $validateData['cart_id'])->where('session_id', $validateData['session_id']);
+            if (!$cart){
                 return response()->json([
                     'message' => 'no cart found',
                     'data' => null
@@ -122,9 +124,9 @@ class CartController extends Controller
                 'message' => 'item deleted successful'
             ]);
         } catch (\Exception $e) {
-            Log::info('error while creating product' . $e);
+            Log::info('error while Deleting product' . $e);
             return response()->json([
-                'message' => 'error while creating product',
+                'message' => 'error while Deleting product',
                 'error' => $e,
             ], 500);
         }

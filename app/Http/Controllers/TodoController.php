@@ -61,14 +61,13 @@ class TodoController extends Controller
     public function show(Request $request)
     {
         $user = $request->user();
-        Log::info($user['id']);
         try {
             $user = User::find($user['id']);
             if (!$user) {
                 return response()->json([
                     'message' => 'No user found',
                     'data' => null
-                ], 404);
+                ], 403);
             }
             $todo = Todo::where('user_id', $user['id'])->paginate(3);
 
@@ -94,14 +93,13 @@ class TodoController extends Controller
             'title' => 'required|string',
         ]);
         $user = $request->user();
-
         try {
             $todo = User::where('id', $user['id'])->get();
             if (!$todo) {
                 return response()->json([
                     'message' => 'No user found',
                     'data' => null,
-                ]);
+                ],403);
             };
             $existTitle = Todo::where('id', $id)->where('user_id', $user['id'])->first();
 
@@ -109,7 +107,7 @@ class TodoController extends Controller
                 return response()->json([
                     'message' => 'No task found for this user',
                     'data' => null
-                ]);
+                ], 403);
             };
             $existTitle['title'] = $validateData['title'];
             $existTitle->save();
@@ -142,14 +140,14 @@ class TodoController extends Controller
                 return response()->json([
                     'message' => 'No user found',
                     'data' => null,
-                ],404);
+                ], 404);
             };
             $existTitle = Todo::where('id', $id)->where('user_id', $user['id'])->first();
             if (!$existTitle) {
                 return response()->json([
                     'message' => 'No task found for this user',
                     'data' => null
-                ],404);
+                ], 404);
             };
             $existTitle['is_complete'] = !$existTitle['is_complete'];
             $existTitle->save();

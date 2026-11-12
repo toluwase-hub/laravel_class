@@ -172,9 +172,9 @@ class ProductController extends Controller
      * Search the specified size in storage.
      */
     public function searchProduct(Request $request)
-    {
-        $searchInput = $request->input('searchInput');
+    {  
         try {
+            $searchInput = $request->input('searchInput');
             $product = Product::where('name', 'LIKE', "%{$searchInput}%")->with('size')->paginate(5);
             if (!$product || empty($searchInput)) {
                 return response()->json([
@@ -203,17 +203,14 @@ class ProductController extends Controller
      */
     public function filterProduct(string $category)
     {
-        $product = Product::where('category', "{$category}")->with('size')->paginate(5);
-
         try {
-
+             $product = Product::where('category', "{$category}")->with('size')->paginate(5);
             if (!$product) {
                 return response()->json([
                     'message' => 'No category found',
                     'data' => null
                 ]);
             }
-
             return response()->json([
                 'message' => 'Search result: ' .  $category,
                 'data' => [
